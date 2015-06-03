@@ -23,15 +23,11 @@ import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.altbeacon.beacon.Beacon;
-import org.altbeacon.beacon.BeaconConsumer;
-import org.altbeacon.beacon.BeaconManager;
-import org.altbeacon.beacon.BeaconParser;
-import org.altbeacon.beacon.BleNotAvailableException;
-import org.altbeacon.beacon.Identifier;
-import org.altbeacon.beacon.MonitorNotifier;
-import org.altbeacon.beacon.RangeNotifier;
-import org.altbeacon.beacon.Region;
+import org.altbeacon.beacon.*;
+import org.altbeacon.beacon.powersave.BackgroundPowerSaver;
+import org.altbeacon.beacon.service.BeaconService;
+import org.altbeacon.beacon.startup.BootstrapNotifier;
+import org.altbeacon.beacon.startup.RegionBootstrap;
 import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -99,7 +95,11 @@ public class LocationManager extends CordovaPlugin implements BeaconConsumer {
         initLocationManager();
         
         debugEnabled = true;
-        
+
+		//Start BackgroundBeaconService.
+		Intent startServiceIntent = new Intent(this.getApplicationContext(), BackgroundBeaconService.class);
+		this.getApplicationContext().startService(startServiceIntent);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
         	initBluetoothAdapter();
         }
@@ -112,14 +112,15 @@ public class LocationManager extends CordovaPlugin implements BeaconConsumer {
      */ 
     @Override
     public void onDestroy() {
-    	iBeaconManager.unbind(this);
-    	
+    	debugLog("Activity being Destroyed.");
+    	/*iBeaconManager.unbind(this);
+
     	if (broadcastReceiver != null) {
     		cordova.getActivity().unregisterReceiver(broadcastReceiver);
     		broadcastReceiver = null;
-    	}
-    	
-    	super.onDestroy(); 
+    	}*/
+
+    	super.onDestroy();
     }
 
 
@@ -333,19 +334,19 @@ public class LocationManager extends CordovaPlugin implements BeaconConsumer {
 		iBeaconManager.setMonitorNotifier(new MonitorNotifier() {
             @Override
             public void didEnterRegion(Region region) {
-            	debugLog("didEnterRegion INSIDE for "+region.getUniqueId());
+            	debugLog("foreground didEnterRegion INSIDE for "+region.getUniqueId());
             	dispatchMonitorState("didEnterRegion", MonitorNotifier.INSIDE,region,callbackContext);
             }
 
             @Override
             public void didExitRegion(Region region) {
-            	debugLog("didExitRegion OUTSIDE for "+region.getUniqueId());  
+            	debugLog("foreground didExitRegion OUTSIDE for "+region.getUniqueId());
             	dispatchMonitorState("didExitRegion", MonitorNotifier.OUTSIDE,region,callbackContext);
             }
 
             @Override
 			public void didDetermineStateForRegion(int state, Region region) {
-            	debugLog("didDetermineStateForRegion '"+nameOfRegionState(state)+"' for region: "+region.getUniqueId());
+            	debugLog("foreground didDetermineStateForRegion '"+nameOfRegionState(state)+"' for region: "+region.getUniqueId());
                 dispatchMonitorState("didDetermineStateForRegion", state,region,callbackContext);
             }
             
