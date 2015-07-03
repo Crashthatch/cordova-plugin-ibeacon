@@ -72,6 +72,12 @@ public class BackgroundBeaconService extends Service implements BootstrapNotifie
 	public void didEnterRegion(Region region) {
 		//sendNotification();
 		Log.d("com.unarin.cordova.beacon", "BackgroundBeaconService.didEnterRegion called!");
+
+		Context context = getApplicationContext();
+		//or Context context=cordova.getActivity().getApplicationContext();
+		Intent intent = new Intent(context, BackgroundBeaconCordovaActivity.class);
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT );
+		context.startActivity(intent);
 	}
 
 	@Override

@@ -87,6 +87,7 @@
             <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 			<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
             <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+            <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
         </config-file>
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
@@ -124,6 +125,7 @@
                     <action android:name="com.unarin.cordova.beacon.IBeaconPlugin.DID_MONITORING" />
                 </intent-filter>
             </service>
+            <activity android:exported="false" android:launchMode="singleTask" android:name="com.unarin.cordova.beacon.BackgroundBeaconCordovaActivity" android:theme="@android:style/Theme.NoDisplay" android:noHistory="true"/>
         </config-file>
 		
         <source-file src="src/android/LocationManager.java" target-dir="src/com/unarin/cordova/beacon" />
@@ -131,7 +133,8 @@
         <source-file src="src/android/ILocationManagerCommand.java" target-dir="src/com/unarin/cordova/beacon" />
         <source-file src="src/android/PausableThreadPoolExecutor.java" target-dir="src/com/unarin/cordova/beacon" />
         <source-file src="src/android/BackgroundBeaconService.java" target-dir="src/com/unarin/cordova/beacon" />
-        <source-file src="src/android/StartupBroadcastReceiver.java" target-dir="src/com/unarin/cordova/beacon" />~
+        <source-file src="src/android/StartupBroadcastReceiver.java" target-dir="src/com/unarin/cordova/beacon" />
+        <source-file src="src/android/BackgroundBeaconCordovaActivity.java" target-dir="src/com/unarin/cordova/beacon" />
 
 		<source-file src="libs/android/altbeacon.jar" target-dir="libs" framework="true" />
     </platform>
