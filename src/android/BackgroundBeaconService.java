@@ -21,7 +21,7 @@ import java.util.Collection;
 /**
  * Created by Tom on 01/06/2015.
  */
-public class BackgroundBeaconService extends Service implements BootstrapNotifier, RangeNotifier {
+public class BackgroundBeaconService extends Service implements BootstrapNotifier, RangeNotifier, BeaconConsumer {
 
 	public BackgroundBeaconService() {
 		super();
@@ -30,6 +30,7 @@ public class BackgroundBeaconService extends Service implements BootstrapNotifie
 	private BackgroundPowerSaver backgroundPowerSaver;
 	private BeaconManager iBeaconManager;
 	private ArrayList<RegionBootstrap> regionBootstraps;
+	private Region backgroundRegionAll;
 
 	public void onCreate() {
 		Log.d("com.unarin.cordova.beacon", "BACKGROUND: Creating BackgroundBeaconService.");
@@ -38,6 +39,7 @@ public class BackgroundBeaconService extends Service implements BootstrapNotifie
 		iBeaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
 		//iBeaconManager.setBackgroundMode(false);
 		iBeaconManager.setBackgroundBetweenScanPeriod(20000);
+		iBeaconManager.setBackgroundScanPeriod(5000);
 		//iBeaconManager.setBackgroundScanPeriod(1000);
 		// Simply constructing this class and holding a reference to it
 		// enables auto battery saving of about 60%
@@ -47,8 +49,8 @@ public class BackgroundBeaconService extends Service implements BootstrapNotifie
 
 		regionBootstraps = new ArrayList<RegionBootstrap>();
 		//masterBeaconRegion.
-		Region region = new Region("backgroundRegionBlispa", Identifier.parse("02424C49-5350-4F00-9DBF-3F5307B1159A"), null, null);
-		regionBootstraps.add(new RegionBootstrap(this, region));
+		backgroundRegionAll = new Region("backgroundRegionAll", null, null, null);
+		regionBootstraps.add(new RegionBootstrap(this, backgroundRegionAll));
 		regionBootstraps.add(new RegionBootstrap(this, new Region("backgroundRegion9", Identifier.parse("02424C49-5350-4F00-9DBF-3F5307B1159A"), Identifier.parse("9"), null)));
 		regionBootstraps.add(new RegionBootstrap(this, new Region("backgroundRegion16", Identifier.parse("02424C49-5350-4F00-9DBF-3F5307B1159A"), Identifier.parse("16"), null)));
 		regionBootstraps.add(new RegionBootstrap(this, new Region("backgroundRegion21", Identifier.parse("02424C49-5350-4F00-9DBF-3F5307B1159A"), Identifier.parse("21"), null)));
@@ -61,6 +63,8 @@ public class BackgroundBeaconService extends Service implements BootstrapNotifie
 		regionBootstraps.add(new RegionBootstrap(this, new Region("backgroundRegion28", Identifier.parse("02424C49-5350-4F00-9DBF-3F5307B1159A"), Identifier.parse("28"), null)));
 		regionBootstraps.add(new RegionBootstrap(this, new Region("backgroundRegion29", Identifier.parse("02424C49-5350-4F00-9DBF-3F5307B1159A"), Identifier.parse("29"), null)));
 
+		iBeaconManager.bind(this);
+
 		Log.d("com.unarin.cordova.beacon", "BACKGROUND: Created RegionBootstrap in BackgroundBeaconService.");
 	}
 
@@ -72,6 +76,11 @@ public class BackgroundBeaconService extends Service implements BootstrapNotifie
 	public void didEnterRegion(Region region) {
 		//sendNotification();
 		Log.d("com.unarin.cordova.beacon", "BackgroundBeaconService.didEnterRegion called!");
+
+		//This only seems to get called if there's no cordovaActivity to intercept it (either in the foreground or the background).
+
+		//TODO: Ping API.
+		// Maybe send notifications?
 	}
 
 	@Override
@@ -97,8 +106,17 @@ public class BackgroundBeaconService extends Service implements BootstrapNotifie
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		// TODO Auto-generated method stub
+		Log.d("com.unarin.cordova.beacon", "BackgroundBeaconService.onBind called!");
 		return null;
+	}
+
+	public void onBeaconServiceConnect(){
+		Log.d("com.unarin.cordova.beacon", "BackgroundBeaconService.onBeaconServiceConnect called!");
+		try{
+			iBeaconManager.startRangingBeaconsInRegion(backgroundRegionAll);
+		}catch( android.os.RemoteException e ){
+			Log.e("com.unarin.cordova.beacon", e.toString());
+		}
 	}
 
 	/*private void sendNotification() {
